@@ -1,0 +1,46 @@
+---
+title: "Project1"
+author: Your Name
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment
+
+Please paste the assignment here
+
+## Reading data
+
+Please add R code that reads data here
+
+```{r reading_data, echo=FALSE}
+
+```
+
+## Computation
+
+Please add R code that computes the results
+
+```{r computation, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Results
+
+These are our results:
+
+```{r results, echo=FALSE}
+x<-data.frame("GLM"=c(0.1,0.2),"kNNC"=c(0.3,0.4))
+rownames(x) <- c("first10","all")
+library(knitr)
+kable(x)
+```
+
+## Discussion
+
+This is what I found out
