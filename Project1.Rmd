@@ -5,7 +5,13 @@ output: word_document
 ---
 
 ```{r setup, include=FALSE}
+library(knitr)
 knitr::opts_chunk$set(echo = TRUE)
+
+# FIXME: change the input file to TCGA_breast_cancer_ERpositive_vs_ERnegative_PAM50.tsv
+
+file <- "TCGA_breast_cancer_LumA_vs_Basal_PAM50.tsv"
+first10 <- c('NAT1','BIRC5','BAG1','BCL2','BLVRA','CCNB1','CCNE1','CDC6','CDC20','CDH3')
 ```
 
 ## Assignment
@@ -14,10 +20,20 @@ Please paste the assignment here
 
 ## Reading data
 
-Please add R code that reads data here
+Please add R code that reads data here - 
+reading file: `r file`
 
 ```{r reading_data, echo=FALSE}
+system.time({
+# important -- this makes sure our runs are consistent and reproducible
+set.seed(0)
 
+header <- scan(file, nlines = 1, sep="\t", what = character())
+data <- read.table(file, skip = 2, header = FALSE, sep = "\t", quote = "", check.names=FALSE)
+names(data) <- header
+
+header2 <- scan(file, skip = 1, nlines = 1, sep="\t", what = character())
+})
 ```
 
 ## Computation
@@ -25,22 +41,82 @@ Please add R code that reads data here
 Please add R code that computes the results
 
 ```{r computation, echo=FALSE}
+cross_validation <- function (nfold, alg="centroid") {
+
+  LumA_groups <- split(sample(colnames(LumA)), 1+(seq_along(colnames(LumA)) %% nfold))
+  Basal_groups <- split(sample(colnames(Basal)), 1+(seq_along(colnames(Basal)) %% nfold))
+  
+  result <- array()
+  
+  for (test_group in 1:nfold) {
+    
+    testA <- LumA[,colnames(LumA) %in% unlist(LumA_groups[test_group])]
+    testB <- Basal[,colnames(Basal) %in% unlist(Basal_groups[test_group])]
+    
+    trainingA <- LumA[,!(colnames(LumA) %in% unlist(LumA_groups[test_group]))]
+    trainingB <- Basal[,!(colnames(Basal) %in% unlist(Basal_groups[test_group]))]
+    
+    if (alg == "centroid") {
+      centroidA <- rowMeans(trainingA)
+      centroidB <- rowMeans(trainingB)
+    
+      misclassifiedA <<- sum(sapply(testA, function(x) { sqrt(sum((x-centroidA)^2))-sqrt(sum((x-centroidB)^2))>0 }))
+      misclassifiedB <<- sum(sapply(testB, function(x) { sqrt(sum((x-centroidA)^2))-sqrt(sum((x-centroidB)^2))<0 }))
+    }
+    
+    if (alg == "GLM") {
+      # FIXME: ADD GLM
+      misclassifiedA <<- 0
+      misclassifiedB <<- 0
+    }
+    
+    result[test_group] <- (misclassifiedA+misclassifiedB)/(ncol(testA)+ncol(testB))
+ }
+ 
+ paste0(round(mean(result),4)," sd=(",round(sd(result),4),")")
+}
+
+system.time({
+
+  # FIXME: the data file has ER "Positive" / "Negative" instead of cancer type
+  # FIXME: gene id field is labeled data$id instead of data$sample_id
+  
+LumA <- data[,header2=='Luminal A']
+Basal <- data[,header2=='Basal-like']
+
+kNNC_5_all <- cross_validation(nfold=5)
+GLM_5_all <- cross_validation(nfold=5, alg="GLM")
+
+kNNC_10_all <- cross_validation(nfold=20)
+GLM_10_all <- cross_validation(nfold=10, alg="GLM")
+
+# FIXME: add code to compute 10 fold cross validation for GLM and kNNC
+
+})
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code.
 
 ## Results
 
 These are our results:
 
-```{r results, echo=FALSE}
-x<-data.frame("GLM"=c(0.1,0.2),"kNNC"=c(0.3,0.4))
-rownames(x) <- c("first10","all")
-library(knitr)
+### 5-fold cross validation
+```{r results5, echo=FALSE}
+x<-data.frame("GLM"=c(GLM_5_all,GLM_10_all),"kNNC"=c(kNNC_5_all,kNNC_10_all))
+rownames(x) <- c("5-fold","10-fold")
 kable(x)
 ```
+
 
 ## Discussion
 
 This is what I found out
+
+# Part 2
+
+Change eval=TRUE when ready to include Project1fs.R
+
+```{r part2, eval = TRUE, code=readLines("Project1fs.R"), echo=FALSE}
+```
