@@ -118,5 +118,5 @@ This is what I found out
 
 Change eval=TRUE when ready to include Project1fs.R
 
-```{r part2, eval = TRUE, code=readLines("Project1fs.R"), echo=FALSE}
+```{r part2, eval = FALSE, code=readLines("Project1fs.R"), echo=FALSE}
 ```
